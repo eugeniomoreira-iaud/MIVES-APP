@@ -6,7 +6,7 @@ Usage:
     python main.py
 
 Build executable:
-    pyinstaller --onefile --windowed --name "MIVES_Tool" main.py
+    pyinstaller --onefile --windowed --name "MIVES Tool" main.py
 """
 import logging
 import sys
