@@ -5,11 +5,69 @@ Implements exponential value functions per Boix-Cots et al. (2022)
 import logging
 import math
 from typing import Any, Dict, List, Optional, Tuple
+from functools import lru_cache
 
 import numpy as np
 
 
 logger = logging.getLogger(__name__)
+
+
+@lru_cache(maxsize=1024)
+def _calculate_mives_value_cached(
+    x: float,
+    x_sat_0: float,
+    x_sat_1: float,
+    C: float,
+    K: float,
+    P: float,
+) -> float:
+    """
+    Cached version of MIVES exponential satisfaction calculation.
+    This is a pure function suitable for memoization.
+    
+    Note: Only hashable (immutable) arguments can be cached, so this works
+    with float parameters but caller must ensure proper types.
+    """
+    try:
+        dist_x = abs(float(x) - float(x_sat_0))
+        dist_max = abs(float(x_sat_1) - float(x_sat_0))
+
+        # Direction Logic: short-circuit values outside saturation
+        is_increasing = x_sat_1 > x_sat_0
+        if is_increasing:
+            if x <= x_sat_0:
+                return 0.0
+            if x >= x_sat_1:
+                return 1.0
+        else:
+            if x >= x_sat_0:
+                return 0.0
+            if x <= x_sat_1:
+                return 1.0
+
+        # Prevent division by zero / extremely small denominators
+        C = max(float(C), 1e-4)
+
+        # Compute normalization factor B robustly
+        try:
+            phi_max = math.exp(-float(K) * math.pow(dist_max / C, float(P)))
+            B = 1.0 if abs(1.0 - phi_max) < 1e-12 else 1.0 / (1.0 - phi_max)
+        except (ValueError, OverflowError) as exc:
+            logger.debug("phi_max computation failed: %s", exc)
+            B = 1.0
+
+        try:
+            phi_x = math.exp(-float(K) * math.pow(dist_x / C, float(P)))
+            value = B * (1.0 - phi_x)
+        except (ValueError, OverflowError) as exc:
+            logger.debug("phi_x computation failed: %s", exc)
+            value = 0.0
+
+        return float(max(0.0, min(1.0, value)))
+    except Exception as exc:
+        logger.exception("Unexpected error calculating mives value: %s", exc)
+        return 0.0
 
 
 class MivesLogic:
@@ -27,6 +85,7 @@ class MivesLogic:
         Calculate the MIVES exponential satisfaction value for a single measurement.
 
         The implementation follows the exponential formulation used in Boix-Cots et al. (2022).
+        This method now uses an LRU cache for improved performance with repeated calculations.
 
         Args:
             x: Observed value.
@@ -39,6 +98,27 @@ class MivesLogic:
         Returns:
             Normalized satisfaction value between 0.0 and 1.0.
         """
+        # Convert to float to ensure hashability for cache
+        try:
+            return _calculate_mives_value_cached(
+                float(x), float(x_sat_0), float(x_sat_1),
+                float(C), float(K), float(P)
+            )
+        except (TypeError, ValueError):
+            # Fallback for unhashable types (shouldn't happen with float conversions)
+            logger.warning("Cache miss due to type conversion issue, using uncached calculation")
+            return self._calculate_mives_value_uncached(x, x_sat_0, x_sat_1, C, K, P)
+    
+    def _calculate_mives_value_uncached(
+        self,
+        x: float,
+        x_sat_0: float,
+        x_sat_1: float,
+        C: float,
+        K: float,
+        P: float,
+    ) -> float:
+        """Uncached fallback version of calculate_mives_value."""
         try:
             dist_x = abs(float(x) - float(x_sat_0))
             dist_max = abs(float(x_sat_1) - float(x_sat_0))

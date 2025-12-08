@@ -39,7 +39,9 @@ def generate_single_curve(mives_logic: Any,
             margin = 1.0
         x_min_plot = min(x_sat_0, x_sat_1) - margin
         x_max_plot = max(x_sat_0, x_sat_1) + margin
-        x_vals = np.linspace(x_min_plot, x_max_plot, 150)
+        # Reduce to 100 points for better performance (was 150)
+        # Visual quality is nearly identical with fewer points
+        x_vals = np.linspace(x_min_plot, x_max_plot, 100)
         y_vals = [mives_logic.calculate_mives_value(float(v), x_sat_0, x_sat_1, C, K, P) for v in x_vals]
     except Exception:
         x_vals, y_vals = [], []

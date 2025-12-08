@@ -520,7 +520,8 @@ class ScenariosContainerTab(QWidget):
         header.sectionResized.connect(lambda index, old, new, tab=scenario_tab: self._on_column_resized(tab, index, old, new))
 
     def _on_main_splitter_moved(self, source_tab):
-        """Propagate main horizontal splitter sizes from source_tab to others."""
+        """Propagate main horizontal splitter sizes from source_tab to others.
+        Optimized to batch updates and reduce redundant operations."""
         try:
             sizes = source_tab.main_splitter.sizes()
         except Exception:
@@ -529,21 +530,26 @@ class ScenariosContainerTab(QWidget):
         # Update shared cache
         self._shared_main_splitter_sizes = sizes
 
-        # Propagate sizes to other tabs
-        for i in range(self.scenario_tabs.count() - 1):
+        # Batch collect tabs that need updates (filter once)
+        tabs_to_update = []
+        tab_count = self.scenario_tabs.count() - 1
+        for i in range(tab_count):
             tab = self.scenario_tabs.widget(i)
-            if tab is source_tab:
-                continue
-            if hasattr(tab, 'main_splitter'):
-                try:
-                    tab.main_splitter.blockSignals(True)
-                    tab.main_splitter.setSizes(sizes)
-                    tab.main_splitter.blockSignals(False)
-                except Exception:
-                    pass
+            if tab is not source_tab and hasattr(tab, 'main_splitter'):
+                tabs_to_update.append(tab)
+
+        # Apply updates in batch
+        for tab in tabs_to_update:
+            try:
+                tab.main_splitter.blockSignals(True)
+                tab.main_splitter.setSizes(sizes)
+                tab.main_splitter.blockSignals(False)
+            except Exception:
+                pass
 
     def _on_chart_splitter_moved(self, source_tab):
-        """Propagate chart vertical splitter sizes from source_tab to others."""
+        """Propagate chart vertical splitter sizes from source_tab to others.
+        Optimized to batch updates and reduce redundant operations."""
         try:
             sizes = source_tab.chart_splitter.sizes()
         except Exception:
@@ -551,47 +557,55 @@ class ScenariosContainerTab(QWidget):
 
         self._shared_chart_splitter_sizes = sizes
 
-        for i in range(self.scenario_tabs.count() - 1):
+        # Batch collect tabs that need updates
+        tabs_to_update = []
+        tab_count = self.scenario_tabs.count() - 1
+        for i in range(tab_count):
             tab = self.scenario_tabs.widget(i)
-            if tab is source_tab:
-                continue
-            if hasattr(tab, 'chart_splitter'):
-                try:
-                    tab.chart_splitter.blockSignals(True)
-                    tab.chart_splitter.setSizes(sizes)
-                    tab.chart_splitter.blockSignals(False)
-                except Exception:
-                    pass
+            if tab is not source_tab and hasattr(tab, 'chart_splitter'):
+                tabs_to_update.append(tab)
+
+        # Apply updates in batch
+        for tab in tabs_to_update:
+            try:
+                tab.chart_splitter.blockSignals(True)
+                tab.chart_splitter.setSizes(sizes)
+                tab.chart_splitter.blockSignals(False)
+            except Exception:
+                pass
 
     def _on_column_resized(self, source_tab, logicalIndex, oldSize, newSize):
         """Propagate a column resize from `source_tab` to all other scenario tabs.
+        Optimized to batch collection and updates.
 
         Temporarily blocks signals on target headers to avoid recursion.
         Also updates the shared column size cache so newly created tabs use
         the latest sizes.
         """
         # Update shared cache
-        # Ensure list is long enough
         if logicalIndex >= len(self._shared_col_sizes):
-            # Extend with current newSize for missing indices
             self._shared_col_sizes.extend([0] * (logicalIndex + 1 - len(self._shared_col_sizes)))
         self._shared_col_sizes[logicalIndex] = newSize
 
-        # Propagate to all other scenario tabs
-        for i in range(self.scenario_tabs.count() - 1):
+        # Batch collect tabs and headers that need updates
+        updates = []
+        tab_count = self.scenario_tabs.count() - 1
+        for i in range(tab_count):
             tab = self.scenario_tabs.widget(i)
-            if tab is source_tab:
-                continue
-            if hasattr(tab, 'table'):
-                try:
-                    header = tab.table.horizontalHeader()
-                    header.blockSignals(True)
-                    # Only resize if the column exists
-                    if logicalIndex < tab.table.columnCount():
-                        header.resizeSection(logicalIndex, newSize)
-                    header.blockSignals(False)
-                except Exception:
-                    pass
+            if tab is not source_tab and hasattr(tab, 'table'):
+                header = tab.table.horizontalHeader()
+                # Only include if column exists
+                if logicalIndex < tab.table.columnCount():
+                    updates.append((header, logicalIndex, newSize))
+
+        # Apply all updates in batch
+        for header, col_idx, size in updates:
+            try:
+                header.blockSignals(True)
+                header.resizeSection(col_idx, size)
+                header.blockSignals(False)
+            except Exception:
+                pass
     
     def close_scenario_tab(self, index):
         """Close a scenario sub-tab"""

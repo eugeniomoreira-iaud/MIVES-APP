@@ -3,6 +3,7 @@ MIVES Data Import/Export Manager
 Handles CSV operations for structure and function parameters
 """
 import csv
+from logic.tree_utils import get_local_weight_fast
 
 
 class DataManager:
@@ -132,14 +133,16 @@ class DataManager:
         
         def check(item):
             total = 0.0
-            for i in range(item.childCount()):
+            child_count = item.childCount()
+            for i in range(child_count):
                 child = item.child(i)
-                try: 
-                    total += float(child.text(1).replace('%',''))
+                try:
+                    # Use optimized weight extraction
+                    total += get_local_weight_fast(child) * 100.0
                 except: 
                     pass
                 check(child)
-            if item.childCount() > 0 and abs(total - 100.0) > 0.1:
+            if child_count > 0 and abs(total - 100.0) > 0.1:
                 errors.append(f"{item.text(0)}: Children sum to {total}%")
         
         root = tree_widget.topLevelItem(0)
