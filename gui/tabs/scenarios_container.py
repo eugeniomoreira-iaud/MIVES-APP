@@ -530,13 +530,13 @@ class ScenariosContainerTab(QWidget):
         # Update shared cache
         self._shared_main_splitter_sizes = sizes
 
-        # Batch collect tabs that need updates (filter once)
-        tabs_to_update = []
+        # Collect tabs that need updates using list comprehension
         tab_count = self.scenario_tabs.count() - 1
-        for i in range(tab_count):
-            tab = self.scenario_tabs.widget(i)
-            if tab is not source_tab and hasattr(tab, 'main_splitter'):
-                tabs_to_update.append(tab)
+        tabs_to_update = [
+            tab for i in range(tab_count)
+            if (tab := self.scenario_tabs.widget(i)) is not source_tab 
+            and hasattr(tab, 'main_splitter')
+        ]
 
         # Apply updates in batch
         for tab in tabs_to_update:
@@ -557,13 +557,13 @@ class ScenariosContainerTab(QWidget):
 
         self._shared_chart_splitter_sizes = sizes
 
-        # Batch collect tabs that need updates
-        tabs_to_update = []
+        # Collect tabs that need updates using list comprehension
         tab_count = self.scenario_tabs.count() - 1
-        for i in range(tab_count):
-            tab = self.scenario_tabs.widget(i)
-            if tab is not source_tab and hasattr(tab, 'chart_splitter'):
-                tabs_to_update.append(tab)
+        tabs_to_update = [
+            tab for i in range(tab_count)
+            if (tab := self.scenario_tabs.widget(i)) is not source_tab 
+            and hasattr(tab, 'chart_splitter')
+        ]
 
         # Apply updates in batch
         for tab in tabs_to_update:

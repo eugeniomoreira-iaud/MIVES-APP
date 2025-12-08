@@ -99,14 +99,15 @@ class MivesLogic:
             Normalized satisfaction value between 0.0 and 1.0.
         """
         # Convert to float to ensure hashability for cache
+        # The try-except is for backwards compatibility with any non-numeric inputs
         try:
             return _calculate_mives_value_cached(
                 float(x), float(x_sat_0), float(x_sat_1),
                 float(C), float(K), float(P)
             )
-        except (TypeError, ValueError):
-            # Fallback for unhashable types (shouldn't happen with float conversions)
-            logger.warning("Cache miss due to type conversion issue, using uncached calculation")
+        except (TypeError, ValueError) as e:
+            # Log unexpected type issues for debugging
+            logger.warning("Unexpected type in calculate_mives_value: %s. Using uncached calculation.", e)
             return self._calculate_mives_value_uncached(x, x_sat_0, x_sat_1, C, K, P)
     
     def _calculate_mives_value_uncached(

@@ -86,13 +86,18 @@ def get_local_weight_fast(item: Any) -> float:
     """
     Fast version of get_local_weight without caching overhead.
     Use this for one-time traversals where caching overhead isn't worthwhile.
+    
+    Note: This maintains the original behavior where weights are always divided by 100.
+    Examples: "50%" -> 0.5, "25%" -> 0.25
+    If the value doesn't contain '%', it's still divided by 100 for consistency.
     """
     try:
         weight_text = item.text(1)
-        # Optimize: check if '%' exists before replacing
+        # Optimize: check if '%' exists before replacing (faster than unconditional replace)
         if '%' in weight_text:
             return float(weight_text.replace("%", "")) / 100.0
         else:
+            # Still divide by 100 to maintain original behavior
             return float(weight_text) / 100.0
     except Exception:
         return 0.0
