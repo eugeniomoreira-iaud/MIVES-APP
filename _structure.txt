@@ -1,0 +1,30 @@
+MIVES-Project/
+│
+├── main.py
+├── requirements.txt
+├── mives.spec
+│
+├── logic/
+│   ├── __init__.py
+│   ├── math_engine.py
+│   └── data_manager.py
+│
+├── gui/
+│   ├── __init__.py
+│   ├── main_window.py
+│   ├── styles.py
+│   │
+│   ├── widgets/
+│   │   ├── __init__.py
+│   │   └── native_sankey.py
+│   │
+│   └── tabs/
+│       ├── __init__.py
+│       ├── builder.py
+│       ├── functions.py
+│       ├── viz.py
+│       ├── scenarios_container.py
+│       └── scenarios.py
+│
+└── assets/
+    └── logo.png

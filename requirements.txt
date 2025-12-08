@@ -1,0 +1,5 @@
+PyQt6==6.6.1
+PyQt6-WebEngine==6.6.0
+plotly==5.18.0
+numpy==1.26.2
+kaleido==0.2.1
