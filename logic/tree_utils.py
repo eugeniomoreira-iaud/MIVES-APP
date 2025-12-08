@@ -16,6 +16,7 @@ class TreeItemCache:
     
     def get_weight(self, item: Any) -> float:
         """Get local weight of an item with caching."""
+        uid = None
         try:
             # Get UID for cache key
             from PyQt6.QtCore import Qt
@@ -43,6 +44,7 @@ class TreeItemCache:
     
     def get_text(self, item: Any, column: int) -> str:
         """Get text from item column with caching."""
+        uid = None
         try:
             from PyQt6.QtCore import Qt
             uid = item.data(0, Qt.ItemDataRole.UserRole)
