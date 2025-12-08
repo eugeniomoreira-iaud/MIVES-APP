@@ -12,6 +12,7 @@ from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QColor
 from logic.math_engine import MivesLogic
 from logic.data_manager import DataManager
+from logic.tree_utils import collect_indicators
 from gui.styles import DEFAULT_FUNC_STYLE
 
 
@@ -606,24 +607,15 @@ class FunctionsTab(QWidget):
         return camel if camel else "indicator"
     
     def batch_export_charts(self):
-        """Export all indicator charts at once"""
+        """Export all indicator charts at once.
+        Optimized to use efficient tree collection."""
         # Get folder selection
         folder = QFileDialog.getExistingDirectory(self, "Select Export Folder")
         if not folder:
             return
         
-        # Collect all indicators
-        indicators = []
-        
-        def find_indicators(item):
-            if item.text(2) == "Indicator":
-                indicators.append(item)
-            for i in range(item.childCount()):
-                find_indicators(item.child(i))
-        
-        root = self.tree_widget.topLevelItem(0)
-        if root:
-            find_indicators(root)
+        # Collect all indicators using optimized function
+        indicators = collect_indicators(self.tree_widget)
         
         if not indicators:
             QMessageBox.warning(self, "No Indicators", "No indicators found to export.")

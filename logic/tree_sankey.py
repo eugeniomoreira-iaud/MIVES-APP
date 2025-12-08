@@ -6,6 +6,7 @@ transformations so the core `math_engine` remains usable without GUI
 dependencies during unit tests or headless execution.
 """
 from typing import Any, Dict, List, Optional, Tuple
+from logic.tree_utils import get_local_weight_fast
 
 
 def generate_sankey_from_tree_item(root_item: Any, style_opts: Optional[Dict[str, Any]] = None) -> Any:
@@ -37,10 +38,7 @@ def generate_sankey_from_tree_item(root_item: Any, style_opts: Optional[Dict[str
     max_depth = [0]
 
     def get_local_weight(item: Any) -> float:
-        try:
-            return float(item.text(1).replace("%", "")) / 100.0
-        except Exception:
-            return 0.0
+        return get_local_weight_fast(item)
 
     def build_label(name: str, weight_pct: Optional[float]) -> str:
         if show_node_weight and weight_pct is not None:
@@ -210,10 +208,7 @@ def generate_sankey_data(root_item: Any, style_opts: Optional[Dict[str, Any]] = 
     uid_to_idx = {}
 
     def get_local_weight(item: Any) -> float:
-        try:
-            return float(item.text(1).replace("%", "")) / 100.0
-        except Exception:
-            return 0.0
+        return get_local_weight_fast(item)
 
     def build_label(name: str, weight_pct: Optional[float]) -> str:
         if show_node_weight and weight_pct is not None:
@@ -361,10 +356,7 @@ def generate_scenario_sankey_data(root_item: Any, scenario_scores: Optional[Dict
     node_satisfaction = {}
 
     def get_local_weight(item: Any) -> float:
-        try:
-            return float(item.text(1).replace("%", "")) / 100.0
-        except Exception:
-            return 0.0
+        return get_local_weight_fast(item)
 
     def build_label(name: str, satisfaction_score: Optional[float]) -> str:
         if show_node_weight and satisfaction_score is not None:
@@ -542,10 +534,7 @@ def generate_scenario_sankey(root_item: Any, scenario_scores: Optional[Dict[Any,
     max_depth = [0]
 
     def get_local_weight(item: Any) -> float:
-        try:
-            return float(item.text(1).replace('%', '')) / 100.0
-        except Exception:
-            return 0.0
+        return get_local_weight_fast(item)
 
     def build_label(name: str, weight_pct: Optional[float]) -> str:
         if show_node_weight and weight_pct is not None:
