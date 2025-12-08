@@ -1,30 +1,54 @@
+MIVES-APP
+
+Overview: Modular PyQt6 application implementing the MIVES assessment tool.
+This file lists the main packages and key source files with short purpose
+descriptions so contributors can quickly understand the repository layout.
+
+Project files:
+
 MIVES-Project/
 │
-├── main.py
-├── requirements.txt
-├── mives.spec
+├── main.py              : Entry point — creates QApplication and launches GUI.
+├── requirements.txt     : Pinned Python dependencies for development/runtime.
+├── README.md            : Project README (high-level description and usage).
+├── LICENSE.txt          : Project license (MIT).
 │
-├── logic/
-│   ├── __init__.py
-│   ├── math_engine.py
-│   └── data_manager.py
+├── logic/               : Core, GUI-independent logic and helpers.
+│   ├── __init__.py      : Package exports (`MivesLogic`, `DataManager`).
+│   ├── math_engine.py   : Core MIVES computations (`MivesLogic`) and
+│   │                      plotting delegators.
+│   ├── data_manager.py  : CSV import/export helpers and weight validation.
+│   ├── plotting.py      : Plotly plotting helpers (curves, matrix charts).
+│   └── tree_sankey.py   : Tree traversal, Sankey data generation and scoring.
 │
-├── gui/
-│   ├── __init__.py
-│   ├── main_window.py
-│   ├── styles.py
+├── gui/                 : PyQt6 application UI layer.
+│   ├── __init__.py      : GUI package marker/version.
+│   ├── main_window.py   : `MainWindow` with tabs and style managers.
+│   ├── styles.py        : Qt stylesheet and default plotting/sankey styles.
+│   ├── sankey_widget.py : Adapter between legacy dict data and native widget.
 │   │
-│   ├── widgets/
-│   │   ├── __init__.py
-│   │   └── native_sankey.py
+│   ├── widgets/         : Custom GUI widgets.
+│   │   ├── __init__.py  : Widgets package marker.
+│   │   └── native_sankey.py : Native QGraphics-based Sankey renderer and
+│   │                          data models (`NodeData`, `LinkData`, `SankeyData`).
 │   │
-│   └── tabs/
-│       ├── __init__.py
-│       ├── builder.py
-│       ├── functions.py
-│       ├── viz.py
-│       ├── scenarios_container.py
-│       └── scenarios.py
+│   └── tabs/            : Individual application tabs.
+│       ├── __init__.py  : Tabs package marker.
+│                ├── builder.py   : Tab 1 — structure builder (create/manage tree).
+│                ├── functions.py : Tab 2 — value-function editor + previews/exports.
+│                ├── viz.py       : Tab 3 — Sankey visualization and style controls.
+│                ├── scenarios_container.py : Container managing scenario tabs and
+│                │                            shared style controls.
+│                └── scenarios.py : Scenario evaluation tab (inputs, Sankey, matrix).
 │
-└── assets/
-    └── logo.png
+├── tests/               : Unit tests.
+│   └── test_math_engine.py : Tests for `MivesLogic` (numeric stability, bounds).
+│
+└── assets/              : Static assets like logos.
+        └── logo.png        : Project logo (optional).
+
+Notes:
+- The `logic/` package is GUI-free so it can be imported and tested in
+    headless environments.
+- `gui/widgets/native_sankey.py` provides a native renderer to avoid
+    heavy Plotly/QWebEngine dependencies for Sankey exports.

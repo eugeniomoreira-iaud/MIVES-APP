@@ -19,6 +19,12 @@ class ScenariosContainerTab(QWidget):
         self.tree_widget = tree_widget
         self.style_manager = style_manager
         self.scenario_counter = 0
+        # Shared column sizes for ScenarioTab input tables. Keeps columns
+        # synchronized across existing and newly created scenario tabs.
+        self._shared_col_sizes = []
+        # Shared splitter sizes for layout synchronization across scenario tabs
+        self._shared_main_splitter_sizes = []
+        self._shared_chart_splitter_sizes = []
         self.setup_ui()
     
     def setup_ui(self):
@@ -445,17 +451,147 @@ class ScenariosContainerTab(QWidget):
         
         # Create new scenario tab (simplified - no style controls)
         self.scenario_counter += 1
-        scenario = ScenarioTab(
-            self.tree_widget, 
-            self.style_manager
-        )
-        idx = self.scenario_tabs.insertTab(
-            self.scenario_tabs.count() - 1, 
-            scenario, 
-            f"Scenario {self.scenario_counter}"
-        )
+        scenario = ScenarioTab(self.tree_widget, self.style_manager)
+
+        # Insert tab and select it
+        idx = self.scenario_tabs.insertTab(self.scenario_tabs.count() - 1, scenario, f"Scenario {self.scenario_counter}")
         self.scenario_tabs.setCurrentIndex(idx)
+
+        # Ensure the scenario has loaded its indicators (ScenarioTab.__init__ already calls load_indicators)
+        # Apply shared column sizes if available
+        try:
+            header = scenario.table.horizontalHeader()
+            # If we already have stored sizes, apply them to the new tab
+            if self._shared_col_sizes:
+                header.blockSignals(True)
+                for col_index, col_size in enumerate(self._shared_col_sizes):
+                    if col_index < scenario.table.columnCount():
+                        header.resizeSection(col_index, col_size)
+                header.blockSignals(False)
+            else:
+                # If this is the first scenario, capture its initial sizes as shared
+                sizes = []
+                for c in range(scenario.table.columnCount()):
+                    sizes.append(header.sectionSize(c))
+                self._shared_col_sizes = sizes
+
+            # Connect its resize signal so changes propagate to other tabs
+            self._connect_tab_resize_signals(scenario)
+            # Connect splitter signals to synchronize layouts across scenario tabs
+            try:
+                # Apply stored main splitter sizes or capture initial
+                if hasattr(scenario, 'main_splitter'):
+                    if self._shared_main_splitter_sizes:
+                        scenario.main_splitter.blockSignals(True)
+                        scenario.main_splitter.setSizes(self._shared_main_splitter_sizes)
+                        scenario.main_splitter.blockSignals(False)
+                    else:
+                        self._shared_main_splitter_sizes = scenario.main_splitter.sizes()
+
+                    # Connect to propagate moves
+                    scenario.main_splitter.splitterMoved.connect(lambda pos, index, tab=scenario: self._on_main_splitter_moved(tab))
+
+                # Chart splitter (vertical) sizes
+                if hasattr(scenario, 'chart_splitter'):
+                    if self._shared_chart_splitter_sizes:
+                        scenario.chart_splitter.blockSignals(True)
+                        scenario.chart_splitter.setSizes(self._shared_chart_splitter_sizes)
+                        scenario.chart_splitter.blockSignals(False)
+                    else:
+                        self._shared_chart_splitter_sizes = scenario.chart_splitter.sizes()
+
+                    scenario.chart_splitter.splitterMoved.connect(lambda pos, index, tab=scenario: self._on_chart_splitter_moved(tab))
+            except Exception:
+                pass
+        except Exception:
+            # Be tolerant if the table isn't ready; still continue
+            pass
+
         self.update_close_buttons()
+
+    def _connect_tab_resize_signals(self, scenario_tab):
+        """Connect the scenario tab's table header resize signal to the
+        container handler which will propagate the new size to other tabs.
+
+        Uses a bound lambda to pass the source tab reference to the handler.
+        """
+        header = scenario_tab.table.horizontalHeader()
+        # PyQt6 signal: sectionResized(int logicalIndex, int oldSize, int newSize)
+        header.sectionResized.connect(lambda index, old, new, tab=scenario_tab: self._on_column_resized(tab, index, old, new))
+
+    def _on_main_splitter_moved(self, source_tab):
+        """Propagate main horizontal splitter sizes from source_tab to others."""
+        try:
+            sizes = source_tab.main_splitter.sizes()
+        except Exception:
+            return
+
+        # Update shared cache
+        self._shared_main_splitter_sizes = sizes
+
+        # Propagate sizes to other tabs
+        for i in range(self.scenario_tabs.count() - 1):
+            tab = self.scenario_tabs.widget(i)
+            if tab is source_tab:
+                continue
+            if hasattr(tab, 'main_splitter'):
+                try:
+                    tab.main_splitter.blockSignals(True)
+                    tab.main_splitter.setSizes(sizes)
+                    tab.main_splitter.blockSignals(False)
+                except Exception:
+                    pass
+
+    def _on_chart_splitter_moved(self, source_tab):
+        """Propagate chart vertical splitter sizes from source_tab to others."""
+        try:
+            sizes = source_tab.chart_splitter.sizes()
+        except Exception:
+            return
+
+        self._shared_chart_splitter_sizes = sizes
+
+        for i in range(self.scenario_tabs.count() - 1):
+            tab = self.scenario_tabs.widget(i)
+            if tab is source_tab:
+                continue
+            if hasattr(tab, 'chart_splitter'):
+                try:
+                    tab.chart_splitter.blockSignals(True)
+                    tab.chart_splitter.setSizes(sizes)
+                    tab.chart_splitter.blockSignals(False)
+                except Exception:
+                    pass
+
+    def _on_column_resized(self, source_tab, logicalIndex, oldSize, newSize):
+        """Propagate a column resize from `source_tab` to all other scenario tabs.
+
+        Temporarily blocks signals on target headers to avoid recursion.
+        Also updates the shared column size cache so newly created tabs use
+        the latest sizes.
+        """
+        # Update shared cache
+        # Ensure list is long enough
+        if logicalIndex >= len(self._shared_col_sizes):
+            # Extend with current newSize for missing indices
+            self._shared_col_sizes.extend([0] * (logicalIndex + 1 - len(self._shared_col_sizes)))
+        self._shared_col_sizes[logicalIndex] = newSize
+
+        # Propagate to all other scenario tabs
+        for i in range(self.scenario_tabs.count() - 1):
+            tab = self.scenario_tabs.widget(i)
+            if tab is source_tab:
+                continue
+            if hasattr(tab, 'table'):
+                try:
+                    header = tab.table.horizontalHeader()
+                    header.blockSignals(True)
+                    # Only resize if the column exists
+                    if logicalIndex < tab.table.columnCount():
+                        header.resizeSection(logicalIndex, newSize)
+                    header.blockSignals(False)
+                except Exception:
+                    pass
     
     def close_scenario_tab(self, index):
         """Close a scenario sub-tab"""

@@ -35,6 +35,8 @@ class ScenarioTab(QWidget):
     def setup_ui(self):
         layout = QHBoxLayout(self)
         splitter = QSplitter(Qt.Orientation.Horizontal)
+        # expose main splitter so container can synchronize sizes across tabs
+        self.main_splitter = splitter
         
         # Left Panel: Input Table
         left_frame = QFrame()
@@ -77,6 +79,8 @@ class ScenarioTab(QWidget):
         
         # Right Panel: Charts Only (no style controls)
         chart_splitter = QSplitter(Qt.Orientation.Vertical)
+        # expose chart splitter for synchronization (Sankey / Matrix vertical split)
+        self.chart_splitter = chart_splitter
         
         # Sankey
         s_frame = QFrame()
