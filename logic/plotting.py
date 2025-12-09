@@ -83,8 +83,8 @@ def generate_single_curve(mives_logic: Any,
 
     fig.update_layout(
         title=dict(text=f"<b>{name}</b><br><sub>{direction} | P={P}, K={K}, C={C}</sub>", x=0.01, y=0.96, xanchor='left', yanchor='top', font=dict(family=font_family, size=font_size_title)),
-        xaxis_title=dict(text=units, font=dict(family=font_family, size=font_size_axes, weight='bold')),
-        yaxis_title=dict(text="Value (0-1)", font=dict(family=font_family, size=font_size_axes, weight='bold')),
+        xaxis_title=dict(text=units, font=dict(family=font_family, size=font_size_axes)),
+        yaxis_title=dict(text="Value (0-1)", font=dict(family=font_family, size=font_size_axes)),
         margin=dict(l=60, r=20, t=top_margin, b=50), autosize=True, showlegend=False, plot_bgcolor=background_color, paper_bgcolor=background_color,
         font=dict(family=font_family, size=font_size_axes),
         xaxis=dict(showgrid=grid_show, gridcolor=grid_line_color, gridwidth=grid_line_width, griddash=grid_line_dash, linewidth=axis_line_width, linecolor=axis_line_color, mirror=True if (show_axis_top and show_axis_bottom) else False, showline=show_axis_bottom, ticks='outside' if show_axis_bottom else ''),
