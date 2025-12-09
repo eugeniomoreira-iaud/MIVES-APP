@@ -19,7 +19,8 @@ MIVES-Project/
 │   │                      plotting delegators.
 │   ├── data_manager.py  : CSV import/export helpers and weight validation.
 │   ├── plotting.py      : Plotly plotting helpers (curves, matrix charts).
-│   └── tree_sankey.py   : Tree traversal, Sankey data generation and scoring.
+│   ├── tree_sankey.py   : Tree traversal, Sankey data generation and scoring.
+│   └── tree_utils.py    : Helper utilities for tree traversal and manipulation.
 │
 ├── gui/                 : PyQt6 application UI layer.
 │   ├── __init__.py      : GUI package marker/version.
@@ -42,10 +43,11 @@ MIVES-Project/
 │                └── scenarios.py : Scenario evaluation tab (inputs, Sankey, matrix).
 │
 ├── tests/               : Unit tests.
-│   └── test_math_engine.py : Tests for `MivesLogic` (numeric stability, bounds).
+│   ├── test_math_engine.py : Tests for `MivesLogic` (numeric stability, bounds).
+│   └── test_tree_utils.py  : Tests for `tree_utils` (tree traversal and helpers).
 │
-└── assets/              : Static assets like logos.
-        └── logo.png        : Project logo (optional).
+└── assets/              : Static assets like logos (optional — not present in repo).
+    └── logo.png        : Project logo (optional).
 
 Notes:
 - The `logic/` package is GUI-free so it can be imported and tested in
