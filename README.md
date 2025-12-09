@@ -29,41 +29,47 @@ Modular PyQt6 application implementing the MIVES assessment tool, with a GUI lay
 ## Code Map
 ```
 MIVES-Project/
-├── main.py              # Entry point — creates QApplication and launches GUI.
-├── requirements.txt     # Pinned dependencies.
-├── README.md            # This file.
-├── LICENSE.txt          # MIT license.
 │
-├── logic/               # Core, GUI-independent logic and helpers.
-│   ├── __init__.py      # Exports (MivesLogic, DataManager).
-│   ├── math_engine.py   # Core MIVES computations (MivesLogic) + plotting delegators.
-│   ├── data_manager.py  # CSV import/export helpers and weight validation.
-│   ├── plotting.py      # Plotly plotting helpers (curves, matrix charts).
-│   └── tree_sankey.py   # Tree traversal, Sankey data generation, scoring.
+├── main.py              : Entry point — creates QApplication and launches GUI.
+├── requirements.txt     : Pinned Python dependencies for development/runtime.
+├── README.md            : Project README (high-level description and usage).
+├── LICENSE.txt          : Project license (MIT).
 │
-├── gui/                 # PyQt6 UI layer.
-│   ├── __init__.py
-│   ├── main_window.py   # MainWindow with tabs and style managers.
-│   ├── styles.py        # Qt stylesheet + default plotting/sankey styles.
-│   ├── sankey_widget.py # Adapter between legacy dict data and native widget.
+├── logic/               : Core, GUI-independent logic and helpers.
+│   ├── __init__.py      : Package exports (`MivesLogic`, `DataManager`).
+│   ├── math_engine.py   : Core MIVES computations (`MivesLogic`) and
+│   │                      plotting delegators.
+│   ├── data_manager.py  : CSV import/export helpers and weight validation.
+│   ├── plotting.py      : Plotly plotting helpers (curves, matrix charts).
+│   ├── tree_sankey.py   : Tree traversal, Sankey data generation and scoring.
+│   └── tree_utils.py    : Helper utilities for tree traversal and manipulation.
+│
+├── gui/                 : PyQt6 application UI layer.
+│   ├── __init__.py      : GUI package marker/version.
+│   ├── main_window.py   : `MainWindow` with tabs and style managers.
+│   ├── styles.py        : Qt stylesheet and default plotting/sankey styles.
+│   ├── sankey_widget.py : Adapter between legacy dict data and native widget.
 │   │
-│   ├── widgets/
-│   │   ├── __init__.py
-│   │   └── native_sankey.py # QGraphics-based Sankey renderer (NodeData, LinkData, SankeyData).
+│   ├── widgets/         : Custom GUI widgets.
+│   │   ├── __init__.py  : Widgets package marker.
+│   │   └── native_sankey.py : Native QGraphics-based Sankey renderer and
+│   │                          data models (`NodeData`, `LinkData`, `SankeyData`).
 │   │
-│   └── tabs/
-│       ├── __init__.py
-│       ├── builder.py   # Tab 1 — structure builder (create/manage tree).
-│       ├── functions.py # Tab 2 — value-function editor + previews/exports.
-│       ├── viz.py       # Tab 3 — Sankey visualization and style controls.
-│       ├── scenarios_container.py # Manages scenario tabs and shared styles.
-│       └── scenarios.py # Scenario evaluation (inputs, Sankey, matrix).
+│   └── tabs/            : Individual application tabs.
+│       ├── __init__.py  : Tabs package marker.
+│                ├── builder.py   : Tab 1 — structure builder (create/manage tree).
+│                ├── functions.py : Tab 2 — value-function editor + previews/exports.
+│                ├── viz.py       : Tab 3 — Sankey visualization and style controls.
+│                ├── scenarios_container.py : Container managing scenario tabs and
+│                │                            shared style controls.
+│                └── scenarios.py : Scenario evaluation tab (inputs, Sankey, matrix).
 │
-├── tests/
-│   └── test_math_engine.py # Tests for MivesLogic (numeric stability, bounds).
+├── tests/               : Unit tests.
+│   ├── test_math_engine.py : Tests for `MivesLogic` (numeric stability, bounds).
+│   └── test_tree_utils.py  : Tests for `tree_utils` (tree traversal and helpers).
 │
-└── assets/
-    └── logo.png         # Project logo.
+└── assets/              : Static assets like logos (optional — not present in repo).
+    └── logo.png        : Project logo (optional).
 ```
 
 ## Data Flow
